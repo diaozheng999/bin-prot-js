@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "outDir": "dist/esm",
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "importHelpers": true,
+    "allowJs": true,
+    "sourceMap": true
+  },
+  "include": ["./src/**/*"]
+}
