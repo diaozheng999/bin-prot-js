@@ -185,6 +185,7 @@ function addWindowAroundPoints<T>(t: ToTest<T>, points: Iterable<bigint>) {
   return acc;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function genTests(t: ToTest<any>) {
   const points = Array.from(
     new Set(
