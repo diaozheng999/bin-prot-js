@@ -1,5 +1,5 @@
-import { ReadBuffer, ReadError, WriteBuffer } from "./buffer";
-import { Typedef } from "./types";
+import { ReadBuffer, ReadError, WriteBuffer } from "./buffer.js";
+import { Typedef } from "./types.js";
 
 export const Bool: Typedef<boolean> = {
   read(buffer: ReadBuffer) {

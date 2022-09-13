@@ -1,4 +1,4 @@
-import { PreparedContextOfType, Typedef, ValueOfType } from "./types";
+import type { PreparedContextOfType, Typedef, ValueOfType } from "./types.js";
 
 export type ValueOfArray<T> = T extends []
   ? []

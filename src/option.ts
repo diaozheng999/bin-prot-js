@@ -1,5 +1,5 @@
-import { Bool } from "./bool";
-import { Typedef } from "./types";
+import { Bool } from "./bool.js";
+import { Typedef } from "./types.js";
 
 export const none = Symbol("none");
 

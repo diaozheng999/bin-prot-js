@@ -1,7 +1,7 @@
-import { ReadBuffer, WriteBuffer } from "./buffer";
-import { Record } from "./record";
-import { PreparedContextOfArray, Tuple, ValueOfArray } from "./tuple";
-import { PreparedContextOfType, Typedef, ValueOfType } from "./types";
+import { ReadBuffer, WriteBuffer } from "./buffer.js";
+import { Record } from "./record.js";
+import { PreparedContextOfArray, Tuple, ValueOfArray } from "./tuple.js";
+import { PreparedContextOfType, Typedef, ValueOfType } from "./types.js";
 
 export type VariantSpecWithoutPayload<T extends string> = {
   type: T;

@@ -1,5 +1,5 @@
-import { Nat0 } from "./nat0";
-import { Typedef } from "./types";
+import { Nat0 } from "./nat0.js";
+import { Typedef } from "./types.js";
 
 export function HashTable<TK, UK, TV, UV>(
   keySpec: Typedef<TK, UK>,

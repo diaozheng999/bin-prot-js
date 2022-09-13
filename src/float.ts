@@ -1,4 +1,4 @@
-import { Typedef } from "./types";
+import { Typedef } from "./types.js";
 
 export const Float: Typedef<number> = {
   read(buffer) {

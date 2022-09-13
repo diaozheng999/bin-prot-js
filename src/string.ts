@@ -1,5 +1,5 @@
-import { Nat0, readNat0, writeNat0 } from "./nat0";
-import { Typedef } from "./types";
+import { Nat0, readNat0, writeNat0 } from "./nat0.js";
+import { Typedef } from "./types.js";
 
 export const String: Typedef<string, [number, Uint8Array]> = {
   read(buffer) {

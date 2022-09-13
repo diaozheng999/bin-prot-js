@@ -1,5 +1,5 @@
-import { Nat0 } from "./nat0";
-import { Typedef } from "./types";
+import { Nat0 } from "./nat0.js";
+import { Typedef } from "./types.js";
 
 export function List<T, U>(spec: Typedef<T, U>): Typedef<T[], [number, U[]]> {
   return {

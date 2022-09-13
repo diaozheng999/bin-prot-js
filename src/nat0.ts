@@ -1,5 +1,5 @@
-import { ReadBuffer, WriteBuffer } from "./buffer";
-import { Typedef } from "./types";
+import { ReadBuffer, WriteBuffer } from "./buffer.js";
+import { Typedef } from "./types.js";
 
 export const CODE_NEG_INT8 = 0xff;
 export const CODE_INT16 = 0xfe;

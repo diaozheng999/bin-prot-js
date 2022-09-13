@@ -1,6 +1,6 @@
-import { ReadBuffer, ReadError, WriteBuffer } from "./buffer";
-import { CODE_INT16, CODE_INT32, CODE_INT64, CODE_NEG_INT8 } from "./nat0";
-import { Typedef } from "./types";
+import { ReadBuffer, ReadError, WriteBuffer } from "./buffer.js";
+import { CODE_INT16, CODE_INT32, CODE_INT64, CODE_NEG_INT8 } from "./nat0.js";
+import { Typedef } from "./types.js";
 
 export type PreparedInt =
   | number

@@ -1,5 +1,5 @@
-import { Tuple } from "./tuple";
-import { PreparedContextOfType, Typedef, ValueOfType } from "./types";
+import { Tuple } from "./tuple.js";
+import { PreparedContextOfType, Typedef, ValueOfType } from "./types.js";
 
 export function Record<T extends { [key: string]: Typedef<unknown, unknown> }>(
   spec: T

@@ -1,4 +1,4 @@
-import { ReadBuffer, WriteBuffer } from "./buffer";
+import { ReadBuffer, WriteBuffer } from "./buffer.js";
 
 export interface Typedef<T, U = T> {
   read(buffer: ReadBuffer): T;
