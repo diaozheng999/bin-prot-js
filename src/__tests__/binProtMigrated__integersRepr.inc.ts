@@ -1,4 +1,6 @@
-import { expect, test } from "@jest/globals";
+// adapted from https://github.com/janestreet/bin_prot/blob/master/test/integers_repr.ml
+
+import { expect } from "@jest/globals";
 
 import { ReadBuffer, WriteBuffer } from "../buffer.js";
 import {
@@ -31,7 +33,13 @@ interface ToTest<T> extends ToTestBase<T> {
   ofInt64: (value: bigint) => T;
 }
 
-let buffer = new ArrayBuffer(32);
+export interface IntConfig {
+  int: [min: number, max: number];
+  int64bit: [min: bigint, max: bigint];
+  int32bit: [min: number, max: number];
+}
+
+const buffer = new ArrayBuffer(32);
 
 function binProttedSizeOf<T>({ def, ofInt64 }: ToTest<T>, n: bigint) {
   const { context } = def.prepare(ofInt64(n));
@@ -262,12 +270,11 @@ function bint(
     def,
   };
 }
-
-test("bin_prot", () => {
+export function runTests({int, int32bit, int64bit }: IntConfig) {
   const tests = [
     num("int", Int, {
-      min: -2147483648,
-      max: 2147483647,
+      min: int[0],
+      max: int[1],
       loBound: 1,
       hiBound: 5,
     }),
@@ -285,7 +292,7 @@ test("bin_prot", () => {
     }),
     num("nat0", Nat0, {
       min: 0,
-      max: 2147483647,
+      max: int[1],
       loBound: 1,
       hiBound: 5,
     }),
@@ -302,14 +309,14 @@ test("bin_prot", () => {
       loBound: 2,
     }),
     num("int_32bit", Int32Bit, {
-      min: -1073741824,
-      max: 1073741823,
+      min: int32bit[0],
+      max: int32bit[1],
       hiBound: 4,
       loBound: 4,
     }),
     bint("int_64bit", Int64Bit, {
-      min: -1073741824n,
-      max: 1073741823n,
+      min: int64bit[0],
+      max: int64bit[1],
       loBound: 8,
       hiBound: 8,
     }),
@@ -326,14 +333,14 @@ test("bin_prot", () => {
       loBound: 2,
     }),
     num("network32_int", Network32, {
-      min: -1073741824,
-      max: 1073741823,
+      min: int32bit[0],
+      max: int32bit[1],
       hiBound: 4,
       loBound: 4,
     }),
     bint("network64_int", Network64, {
-      min: -1073741824n,
-      max: 1073741823n,
+      min: int64bit[0],
+      max: int64bit[1],
       loBound: 8,
       hiBound: 8,
     }),
@@ -351,13 +358,5 @@ test("bin_prot", () => {
     }),
   ];
 
-  const result = `
-let%expect_test ("javascript integer tests" [@tags "js-only"]) =
-  Integers_repr.run_tests ();
-  [%expect
-    {|
-${tests.map(genTests).join("")}|}]
-;;\n`;
-
-  expect(result).toMatchSnapshot();
-});
+  return "\n" + tests.map(genTests).join("");
+}
