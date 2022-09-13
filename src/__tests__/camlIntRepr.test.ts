@@ -1,20 +1,34 @@
 import { expect, test } from "@jest/globals";
 
 import { ReadBuffer, WriteBuffer } from "../buffer.js";
-import { Int } from "../int.js";
+import {
+  Int,
+  Int16Bit,
+  Int32Bit,
+  Int64,
+  Int64Bit,
+  Network16,
+  Network32,
+  Network64,
+  VariantInt,
+} from "../int.js";
+import { Nat0 } from "../nat0.js";
 import { Typedef } from "../types.js";
 
 const testWindowLen = 16n;
 
-export interface ToTest<T> {
-  name: string;
-  def: Typedef<T, unknown>;
-  toInt64: (value: T) => bigint;
-  ofInt64: (value: bigint) => T;
+interface ToTestBase<T> {
   min: T;
   max: T;
   hiBound: number;
   loBound: number;
+}
+
+interface ToTest<T> extends ToTestBase<T> {
+  name: string;
+  def: Typedef<T, unknown>;
+  toInt64: (value: T) => bigint;
+  ofInt64: (value: bigint) => T;
 }
 
 let buffer = new ArrayBuffer(32);
@@ -49,7 +63,7 @@ function findSizeIncrease<T>(
   expect(sizeM).toBeLessThanOrEqual(sizeN);
   if (sizeM === size && sizeM < sizeN) {
     return m;
-  } else if (sizeM < size) {
+  } else if (sizeM <= size) {
     return findSizeIncrease(t, size, m + 1n, b);
   } else {
     return findSizeIncrease(t, size, a, m);
@@ -154,7 +168,7 @@ function addWindowAroundPoints<T>(t: ToTest<T>, points: Iterable<bigint>) {
     const d = testWindowLen / 2n;
     const a = i <= min + d ? min : i - d;
     const b = i >= max - d ? max : i + d;
-    for (let i = a; i < b; ++i) {
+    for (let i = a; i <= b; ++i) {
       acc.add(i);
     }
   }
@@ -162,7 +176,7 @@ function addWindowAroundPoints<T>(t: ToTest<T>, points: Iterable<bigint>) {
   return acc;
 }
 
-function genTests<T>(t: ToTest<T>) {
+function genTests(t: ToTest<any>) {
   const points = Array.from(
     new Set(
       addWindowAroundPoints(
@@ -173,7 +187,15 @@ function genTests<T>(t: ToTest<T>) {
         })()
       )
     ).values()
-  ).sort();
+  ).sort((a, b) => {
+    if (a === b) {
+      return 0;
+    }
+    if (a < b) {
+      return -1;
+    }
+    return 1;
+  });
 
   const results: string[] = [];
 
@@ -183,11 +205,16 @@ function genTests<T>(t: ToTest<T>) {
 
       const { context } = t.def.prepare(t.ofInt64(n));
       const buf = new WriteBuffer(buffer, true);
-      const len = buf.currentPosition();
       t.def.write(buf, context);
+      const len = buf.currentPosition();
       output += `${t.name}| ${buf.hexdump(9)} -> ${n}`;
 
+      if (t.name === "int32" && n < -1073741831n) {
+        console.log(output, context);
+      }
+
       const readbuffer = new ReadBuffer(buffer);
+
       const received = t.toInt64(t.def.read(readbuffer));
       const receivedLen = readbuffer.currentPosition();
       if (len < t.loBound || len > t.hiBound) {
@@ -212,17 +239,129 @@ function genTests<T>(t: ToTest<T>) {
   return results.join("");
 }
 
-test("bin_prot", () => {
-  const test: ToTest<number> = {
-    name: "int",
-    def: Int,
-    toInt64: (n) => BigInt(n),
-    ofInt64: (n) => Number(n),
-    min: -2147482648,
-    max: 2147483647,
-    hiBound: 9,
-    loBound: 1,
+function num(
+  name: string,
+  def: Typedef<number, unknown>,
+  base: ToTestBase<number>
+): ToTest<number> {
+  return {
+    ...base,
+    toInt64: (x) => BigInt(x),
+    ofInt64: (x) => Number(x),
+    name,
+    def,
   };
+}
 
-  expect(genTests(test)).toMatchSnapshot();
+function bint(
+  name: string,
+  def: Typedef<bigint, unknown>,
+  base: ToTestBase<bigint>
+): ToTest<bigint> {
+  return {
+    ...base,
+    toInt64: (x) => x,
+    ofInt64: (x) => x,
+    name,
+    def,
+  };
+}
+
+test("bin_prot", () => {
+  const tests = [
+    num("int", Int, {
+      min: -2147482648,
+      max: 2147483647,
+      loBound: 1,
+      hiBound: 5,
+    }),
+    num("int32", Int, {
+      min: -2147482648,
+      max: 2147483647,
+      loBound: 1,
+      hiBound: 5,
+    }),
+    bint("int64", Int64, {
+      min: -9223372036854775808n,
+      max: 9223372036854775807n,
+      loBound: 1,
+      hiBound: 9,
+    }),
+    num("nat0", Nat0, {
+      min: 0,
+      max: 2147483647,
+      loBound: 1,
+      hiBound: 5,
+    }),
+    num("variant_int", VariantInt, {
+      min: -(1 << 30),
+      max: (1 << 30) - 1,
+      hiBound: 4,
+      loBound: 4,
+    }),
+    num("int_16bit", Int16Bit, {
+      min: 0,
+      max: (1 << 16) - 1,
+      hiBound: 2,
+      loBound: 2,
+    }),
+    num("int_32bit", Int32Bit, {
+      min: -1073741824,
+      max: 1073741823,
+      hiBound: 4,
+      loBound: 4,
+    }),
+    bint("int_64bit", Int64Bit, {
+      min: -1073741824n,
+      max: 1073741823n,
+      loBound: 8,
+      hiBound: 8,
+    }),
+    bint("int64_bits", Int64Bit, {
+      min: -9223372036854775808n,
+      max: 9223372036854775807n,
+      loBound: 8,
+      hiBound: 8,
+    }),
+    num("network16_int", Network16, {
+      min: 0,
+      max: (1 << 16) - 1,
+      hiBound: 2,
+      loBound: 2,
+    }),
+    num("network32_int", Network32, {
+      min: -1073741824,
+      max: 1073741823,
+      hiBound: 4,
+      loBound: 4,
+    }),
+    bint("network64_int", Network64, {
+      min: -1073741824n,
+      max: 1073741823n,
+      loBound: 8,
+      hiBound: 8,
+    }),
+    num("network32_int32", Network32, {
+      min: -2147483648,
+      max: 2147483647,
+      hiBound: 4,
+      loBound: 4,
+    }),
+    bint("network64_int64", Network64, {
+      min: -9223372036854775808n,
+      max: 9223372036854775807n,
+      loBound: 8,
+      hiBound: 8,
+    }),
+  ];
+
+  const result = `
+let%expect_test ("javascript integer tests" [@tags "js-only"]) =
+  Integers_repr.run_tests ();
+  [%expect
+    {|
+${tests.map(genTests).join("")}|}]
+;;\n`;
+
+  expect(result).toMatchSnapshot();
 });

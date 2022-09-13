@@ -20,6 +20,15 @@ class Buffer implements ArrayBuffer {
 
   public byteLength: number;
 
+  private _view: DataView | undefined;
+
+  protected get view() {
+    if (!this._view) {
+      this._view = new DataView(this.contents);
+    }
+    return this._view;
+  }
+
   constructor(
     private readonly readToken: ReadToken,
     size: number | ArrayBufferLike,
@@ -139,84 +148,58 @@ export class ReadBuffer extends Buffer {
     }
   }
 
-  readOffset(
-    ctor: BigUint64ArrayConstructor | BigInt64ArrayConstructor
-  ): bigint;
-  readOffset(
-    ctor:
-      | Uint8ArrayConstructor
-      | Int8ArrayConstructor
-      | Uint16ArrayConstructor
-      | Int16ArrayConstructor
-      | Uint32ArrayConstructor
-      | Int32ArrayConstructor
-      | Float32ArrayConstructor
-      | Float64ArrayConstructor
-  ): number;
-  readOffset(
-    ctor:
-      | Uint8ArrayConstructor
-      | Int8ArrayConstructor
-      | Uint16ArrayConstructor
-      | Int16ArrayConstructor
-      | Uint32ArrayConstructor
-      | Int32ArrayConstructor
-      | BigUint64ArrayConstructor
-      | BigInt64ArrayConstructor
-      | Float32ArrayConstructor
-      | Float64ArrayConstructor
-  ) {
-    let results: number | bigint;
-    if (this.ptr % ctor.BYTES_PER_ELEMENT) {
-      const buf = new Uint8Array(this.contents, this.ptr);
-      const bypassBytes = new Uint8Array(this.unalignedBypassBuffer, 0);
-      for (let i = 0; i < ctor.BYTES_PER_ELEMENT; ++i) {
-        bypassBytes[i] = buf[i];
-      }
-      const bypassBuf = new ctor(this.unalignedBypassBuffer, 0);
-      results = bypassBuf[0];
-    } else {
-      const buf = new ctor(this.contents, this.ptr);
-      results = buf[0];
-    }
-    this.ptr += ctor.BYTES_PER_ELEMENT;
-    return results;
-  }
-
   readUint8() {
-    return this.readOffset(Uint8Array);
+    const value = this.view.getUint8(this.ptr);
+    this.ptr++;
+    return value;
   }
 
   readInt8() {
-    return this.readOffset(Int8Array);
+    const value = this.view.getInt8(this.ptr);
+    this.ptr++;
+    return value;
   }
 
-  readFloat() {
-    return this.readOffset(Float64Array);
+  readFloat(bigEndian?: boolean) {
+    const value = this.view.getFloat64(this.ptr, !bigEndian);
+    this.ptr += 8;
+    return value;
   }
 
-  readUint16() {
-    return this.readOffset(Uint16Array);
+  readUint16(bigEndian?: boolean) {
+    const value = this.view.getUint16(this.ptr, !bigEndian);
+    this.ptr += 2;
+    return value;
   }
 
-  readInt16() {
-    return this.readOffset(Int16Array);
+  readInt16(bigEndian?: boolean) {
+    const value = this.view.getInt16(this.ptr, !bigEndian);
+    this.ptr += 2;
+    return value;
   }
 
-  readUint32() {
-    return this.readOffset(Uint32Array);
+  readUint32(bigEndian?: boolean) {
+    const value = this.view.getUint32(this.ptr, !bigEndian);
+    this.ptr += 4;
+    return value;
   }
 
-  readInt32() {
-    return this.readOffset(Int32Array);
+  readInt32(bigEndian?: boolean) {
+    const value = this.view.getInt32(this.ptr, !bigEndian);
+    this.ptr += 4;
+    return value;
   }
 
-  readUint64() {
-    return this.readOffset(BigUint64Array);
+  readUint64(bigEndian?: boolean) {
+    const value = this.view.getBigUint64(this.ptr, !bigEndian);
+    this.ptr += 8;
+    return value;
   }
 
-  readInt64() {
-    return this.readOffset(BigInt64Array);
+  readInt64(bigEndian?: boolean) {
+    const value = this.view.getBigInt64(this.ptr, !bigEndian);
+    this.ptr += 8;
+    return value;
   }
 
   readString(byteLength: number) {
@@ -236,65 +219,40 @@ export class WriteBuffer extends Buffer {
     return new Uint8Array(this.contents, 0, this.ptr);
   }
 
-  writeOffsetBigInt(
-    ctor: BigUint64ArrayConstructor | BigInt64ArrayConstructor,
-    value: number | bigint
-  ): void {
-    if (this.ptr % ctor.BYTES_PER_ELEMENT) {
-      const buf = new ctor(this.unalignedBypassBuffer, 0);
-      buf[0] = BigInt(value);
-      this.blit(new Uint8Array(buf), ctor.BYTES_PER_ELEMENT);
-    } else {
-      const buf = new ctor(this.contents, this.ptr);
-      buf[0] = BigInt(value);
-      this.ptr += ctor.BYTES_PER_ELEMENT;
-    }
-  }
-  writeOffset(
-    ctor:
-      | Uint8ArrayConstructor
-      | Int8ArrayConstructor
-      | Uint16ArrayConstructor
-      | Int16ArrayConstructor
-      | Uint32ArrayConstructor
-      | Int32ArrayConstructor
-      | Float32ArrayConstructor
-      | Float64ArrayConstructor,
-    value: number | bigint
-  ) {
-    if (this.ptr % ctor.BYTES_PER_ELEMENT) {
-      const buf = new ctor(this.unalignedBypassBuffer, 0);
-      buf[0] = Number(value);
-      this.blit(new Uint8Array(buf), ctor.BYTES_PER_ELEMENT);
-    } else {
-      const buf = new ctor(this.contents, this.ptr);
-      buf[0] = Number(value);
-      this.ptr += ctor.BYTES_PER_ELEMENT;
-    }
-  }
-
   writeUint8(value: number) {
-    this.writeOffset(Uint8Array, value & 0xff);
+    this.view.setUint8(this.ptr, value & 0xff);
+    this.ptr++;
   }
 
-  writeUint16(value: number) {
-    this.writeOffset(Uint16Array, value & 0xffff);
+  writeUint16(value: number, bigEndian?: boolean) {
+    this.view.setUint16(this.ptr, value & 0xffff, !bigEndian);
+    this.ptr += 2;
   }
 
-  writeUint32(value: number) {
-    this.writeOffset(Uint32Array, value);
+  writeUint32(value: number, bigEndian?: boolean) {
+    console.log(value !== )
+    this.view.setUint32(this.ptr, value, !bigEndian);
+    this.ptr += 4;
   }
 
-  writeUint64(value: number | bigint) {
-    this.writeOffsetBigInt(BigUint64Array, value);
+  writeInt32(value: number, bigEndian?: boolean) {
+    this.view.setInt32(this.ptr, value, !bigEndian);
+    this.ptr += 4;
   }
 
-  writeInt64(value: number | bigint) {
-    this.writeOffsetBigInt(BigInt64Array, value);
+  writeUint64(value: number | bigint, bigEndian?: boolean) {
+    this.view.setBigUint64(this.ptr, BigInt(value), !bigEndian);
+    this.ptr += 8;
   }
 
-  writeFloat(value: number) {
-    this.writeOffset(Float64Array, value);
+  writeInt64(value: number | bigint, bigEndian?: boolean) {
+    this.view.setBigInt64(this.ptr, BigInt(value), !bigEndian);
+    this.ptr += 8;
+  }
+
+  writeFloat(value: number, bigEndian?: boolean) {
+    this.view.setFloat64(this.ptr, value, !bigEndian);
+    this.ptr += 8;
   }
 
   blit(buffer: Uint8Array, length?: number) {
