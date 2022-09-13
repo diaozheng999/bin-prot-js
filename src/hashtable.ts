@@ -1,10 +1,10 @@
 import { Nat0 } from "./nat0.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
 export function HashTable<TK, UK, TV, UV>(
-  keySpec: Typedef<TK, UK>,
-  valueSpec: Typedef<TV, UV>
-): Typedef<Map<TK, TV>, [number, [UK, UV][]]> {
+  keySpec: TypeClass<TK, UK>,
+  valueSpec: TypeClass<TV, UV>
+): TypeClass<Map<TK, TV>, [number, [UK, UV][]]> {
   return {
     read(buffer) {
       const size = Nat0.read(buffer);

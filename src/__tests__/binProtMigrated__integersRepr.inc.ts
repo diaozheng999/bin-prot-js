@@ -16,7 +16,7 @@ import {
   VarInt64,
 } from "../int.js";
 import { Nat0, Nat0_64 } from "../nat0.js";
-import { Typedef } from "../types.js";
+import { TypeClass } from "../types.js";
 
 const testWindowLen = 16n;
 
@@ -29,7 +29,7 @@ interface ToTestBase<T> {
 
 interface ToTest<T> extends ToTestBase<T> {
   name: string;
-  def: Typedef<T, unknown>;
+  def: TypeClass<T, unknown>;
   toInt64: (value: T) => bigint;
   ofInt64: (value: bigint) => T;
 }
@@ -247,7 +247,7 @@ function genTests(t: ToTest<any>) {
 
 function num(
   name: string,
-  def: Typedef<number, unknown>,
+  def: TypeClass<number, unknown>,
   base: ToTestBase<number>
 ): ToTest<number> {
   return {
@@ -261,7 +261,7 @@ function num(
 
 function bint(
   name: string,
-  def: Typedef<bigint, unknown>,
+  def: TypeClass<bigint, unknown>,
   base: ToTestBase<bigint>
 ): ToTest<bigint> {
   return {
@@ -275,7 +275,7 @@ function bint(
 
 function varint(
   name: string,
-  def: Typedef<number | bigint, unknown>,
+  def: TypeClass<number | bigint, unknown>,
   base: ToTestBase<bigint>
 ): ToTest<number | bigint> {
   return {

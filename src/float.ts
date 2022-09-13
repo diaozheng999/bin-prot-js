@@ -1,6 +1,6 @@
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
-export const Float: Typedef<number> = {
+export const Float: TypeClass<number> = {
   read(buffer) {
     return buffer.readFloat();
   },

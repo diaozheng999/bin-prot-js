@@ -1,6 +1,6 @@
 import { ReadBuffer, ReadError, WriteBuffer } from "./buffer.js";
 import { CODE_INT16, CODE_INT32, CODE_INT64, CODE_NEG_INT8 } from "./nat0.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
 export type PreparedInt =
   | number
@@ -76,7 +76,7 @@ export function writeInt(buffer: WriteBuffer, ctx: PreparedInt) {
   }
 }
 
-export const Int: Typedef<number, PreparedInt> = {
+export const Int: TypeClass<number, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
     if (typeof result !== "number") {
@@ -92,7 +92,7 @@ export const Int: Typedef<number, PreparedInt> = {
   write: writeInt,
 };
 
-export const VarInt64: Typedef<number | bigint, PreparedInt> = {
+export const VarInt64: TypeClass<number | bigint, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
     buffer.popReadBoundary();
@@ -102,7 +102,7 @@ export const VarInt64: Typedef<number | bigint, PreparedInt> = {
   write: writeInt,
 };
 
-export const Int64: Typedef<bigint, PreparedInt> = {
+export const Int64: TypeClass<bigint, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
     buffer.popReadBoundary();
@@ -112,7 +112,7 @@ export const Int64: Typedef<bigint, PreparedInt> = {
   write: writeInt,
 };
 
-export const VariantInt: Typedef<number, number> = {
+export const VariantInt: TypeClass<number, number> = {
   read(buffer) {
     buffer.pushReadBoundary();
     const result = buffer.readUint32();
@@ -131,7 +131,7 @@ export const VariantInt: Typedef<number, number> = {
   },
 };
 
-export const Int8Bit: Typedef<number, number> = {
+export const Int8Bit: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readInt8();
   },
@@ -143,7 +143,7 @@ export const Int8Bit: Typedef<number, number> = {
   },
 };
 
-export const Int16Bit: Typedef<number, number> = {
+export const Int16Bit: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readUint16();
   },
@@ -155,7 +155,7 @@ export const Int16Bit: Typedef<number, number> = {
   },
 };
 
-export const Int32Bit: Typedef<number, number> = {
+export const Int32Bit: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readInt32();
   },
@@ -167,7 +167,7 @@ export const Int32Bit: Typedef<number, number> = {
   },
 };
 
-export const Int64Bit: Typedef<bigint, bigint> = {
+export const Int64Bit: TypeClass<bigint, bigint> = {
   read(buffer) {
     return buffer.readInt64();
   },
@@ -179,7 +179,7 @@ export const Int64Bit: Typedef<bigint, bigint> = {
   },
 };
 
-export const Network16: Typedef<number, number> = {
+export const Network16: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readUint16(true);
   },
@@ -191,7 +191,7 @@ export const Network16: Typedef<number, number> = {
   },
 };
 
-export const Network32: Typedef<number, number> = {
+export const Network32: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readInt32(true);
   },
@@ -203,7 +203,7 @@ export const Network32: Typedef<number, number> = {
   },
 };
 
-export const Network64: Typedef<bigint, bigint> = {
+export const Network64: TypeClass<bigint, bigint> = {
   read(buffer) {
     return buffer.readInt64(true);
   },

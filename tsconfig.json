@@ -1,6 +1,6 @@
 {
   "include": ["src/**/*"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": ["**/__tests__/*"],
   "compilerOptions": {
     "incremental": true,
     "target": "ESNext",

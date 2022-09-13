@@ -1,7 +1,7 @@
 import { Nat0, readNat0, writeNat0 } from "./nat0.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
-export const String: Typedef<string, [number, Uint8Array]> = {
+export const String: TypeClass<string, [number, Uint8Array]> = {
   read(buffer) {
     const size = readNat0(buffer);
     const value = buffer.readString(size);

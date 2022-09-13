@@ -1,4 +1,5 @@
 export * from "./bool.js";
+export * from "./char.js";
 export * from "./float.js";
 export * from "./hashtable.js";
 export * from "./int.js";

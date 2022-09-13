@@ -1,14 +1,14 @@
 import { ReadBuffer, WriteBuffer } from "./buffer.js";
 import { Record } from "./record.js";
 import { PreparedContextOfArray, Tuple, ValueOfArray } from "./tuple.js";
-import { PreparedContextOfType, Typedef, ValueOfType } from "./types.js";
+import { PreparedContextOfType, TypeClass, ValueOfType } from "./types.js";
 
 export type VariantSpecWithoutPayload<T extends string> = {
   type: T;
 };
 export type VariantSpecWithPayload<T extends string, V, U> = {
   type: T;
-  payload: Typedef<V, U>;
+  payload: TypeClass<V, U>;
 };
 
 export type VariantSpec =
@@ -50,7 +50,7 @@ export function Variant<TName extends string>(
 ): VariantSpecWithoutPayload<TName>;
 export function Variant<
   TName extends string,
-  TSpec extends { [key: string]: Typedef<unknown, unknown> }
+  TSpec extends { [key: string]: TypeClass<unknown, unknown> }
 >(
   name: TName,
   spec: TSpec
@@ -61,11 +61,11 @@ export function Variant<
 >;
 export function Variant<TName extends string, T, U>(
   name: TName,
-  spec: Typedef<T, U>
+  spec: TypeClass<T, U>
 ): VariantSpecWithPayload<TName, T, U>;
 export function Variant<
   TName extends string,
-  TSpec extends Typedef<unknown, unknown>[]
+  TSpec extends TypeClass<unknown, unknown>[]
 >(
   name: TName,
   ...spec: TSpec
@@ -102,7 +102,7 @@ function hasPayload<T, U>(
 
 export function Enum<T extends VariantSpec[]>(
   ...variants: T
-): Typedef<ValueOfVariants<T>, [number, PreparedContextOfVariants<T>]> {
+): TypeClass<ValueOfVariants<T>, [number, PreparedContextOfVariants<T>]> {
   const idx: Record<string, number> = {};
   const len = variants.length;
 

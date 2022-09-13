@@ -1,11 +1,11 @@
 import { Bool } from "./bool.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
 export const none = Symbol("none");
 
 export function Option<T, U>(
-  typedef: Typedef<T, U>
-): Typedef<T | undefined, U | typeof none> {
+  typedef: TypeClass<T, U>
+): TypeClass<T | undefined, U | typeof none> {
   return {
     read(buffer) {
       const isSome = Bool.read(buffer);

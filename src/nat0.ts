@@ -1,12 +1,14 @@
 import { ReadBuffer, ReadError, WriteBuffer } from "./buffer.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
 export const CODE_NEG_INT8 = 0xff;
 export const CODE_INT16 = 0xfe;
 export const CODE_INT32 = 0xfd;
 export const CODE_INT64 = 0xfc;
 
-export function readNat0(buffer: ReadBuffer) {
+export function readNat0(buffer: ReadBuffer): number;
+export function readNat0(buffer: ReadBuffer, useInt64: true): number | bigint;
+export function readNat0(buffer: ReadBuffer, useInt64?: boolean) {
   const value = buffer.readUint8();
   switch (value) {
     case CODE_INT16:
@@ -14,7 +16,16 @@ export function readNat0(buffer: ReadBuffer) {
     case CODE_INT32:
       return buffer.readUint32();
     case CODE_INT64:
-      return buffer.readUint64();
+      buffer.pushReadBoundary();
+      const n = buffer.readUint64();
+      if (n > BigInt(Number.MAX_SAFE_INTEGER)) {
+        if (useInt64) {
+          return n;
+        } else {
+          throw new ReadError(buffer, `Value is too large: ${n}`);
+        }
+      }
+      return Number(n);
     default:
       return value;
   }
@@ -48,17 +59,9 @@ export function writeNat0(buffer: WriteBuffer, number: number | bigint) {
   }
 }
 
-export const Nat0: Typedef<number> = {
+export const Nat0: TypeClass<number> = {
   read(buffer) {
-    buffer.pushReadBoundary();
-    const n = readNat0(buffer);
-    if (typeof n === "bigint") {
-      if (n > BigInt(Number.MAX_SAFE_INTEGER)) {
-        throw new ReadError(buffer, `Value is too large: ${n}`);
-      }
-      return Number(n);
-    }
-    return n;
+    return readNat0(buffer);
   },
   write: writeNat0,
   prepare(context) {
@@ -68,8 +71,10 @@ export const Nat0: Typedef<number> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const Nat0_64: Typedef<number | bigint> = {
-  read: readNat0,
+export const Nat0_64: TypeClass<number | bigint> = {
+  read(buffer) {
+    return readNat0(buffer, true);
+  },
   write: writeNat0,
   prepare(context) {
     const size = sizeNat0(context);

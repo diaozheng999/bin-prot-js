@@ -1,4 +1,4 @@
-import type { PreparedContextOfType, Typedef, ValueOfType } from "./types.js";
+import type { PreparedContextOfType, TypeClass, ValueOfType } from "./types.js";
 
 export type ValueOfArray<T> = T extends []
   ? []
@@ -12,9 +12,9 @@ export type PreparedContextOfArray<T> = T extends []
   ? [PreparedContextOfType<Head>, ...PreparedContextOfArray<Tail>]
   : never;
 
-export function Tuple<T extends Typedef<unknown, unknown>[]>(
+export function Tuple<T extends TypeClass<unknown, unknown>[]>(
   ...typedefs: T
-): Typedef<ValueOfArray<T>, PreparedContextOfArray<T>> {
+): TypeClass<ValueOfArray<T>, PreparedContextOfArray<T>> {
   const len = typedefs.length;
   return {
     read(buffer) {

@@ -1,7 +1,7 @@
 import { Nat0 } from "./nat0.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
-export function List<T, U>(spec: Typedef<T, U>): Typedef<T[], [number, U[]]> {
+export function List<T, U>(spec: TypeClass<T, U>): TypeClass<T[], [number, U[]]> {
   return {
     read(buffer) {
       const len = Nat0.read(buffer);

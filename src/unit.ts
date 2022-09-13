@@ -1,7 +1,7 @@
 import { ReadBuffer, ReadError, WriteBuffer } from "./buffer.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
-export const Unit: Typedef<undefined> = {
+export const Unit: TypeClass<undefined> = {
   read(buffer: ReadBuffer) {
     buffer.pushReadBoundary();
     const value = buffer.readUint8();

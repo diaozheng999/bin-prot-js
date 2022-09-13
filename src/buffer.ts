@@ -219,6 +219,13 @@ export class WriteBuffer extends Buffer {
     return new Uint8Array(this.contents, 0, this.ptr);
   }
 
+  copy() {
+    const copy = new WriteBuffer(this.ptr);
+    new Uint8Array(copy.contents).set(this.sub());
+    copy.ptr = this.ptr;
+    return copy;
+  }
+
   writeUint8(value: number) {
     this.view.setUint8(this.ptr, value & 0xff);
     this.ptr++;
@@ -252,9 +259,7 @@ export class WriteBuffer extends Buffer {
   blit(buffer: Uint8Array, length?: number) {
     const buf = new Uint8Array(this.contents, this.ptr);
     const len = length ?? buffer.length;
-    for (let i = 0; i < len; ++i) {
-      buf[i] = buffer[i];
-    }
+    buf.set(buffer.slice(len));
     this.ptr += len;
   }
 }

@@ -1,7 +1,7 @@
 import { ReadBuffer, ReadError, WriteBuffer } from "./buffer.js";
-import { Typedef } from "./types.js";
+import { TypeClass } from "./types.js";
 
-export const Bool: Typedef<boolean> = {
+export const Bool: TypeClass<boolean> = {
   read(buffer: ReadBuffer) {
     buffer.pushReadBoundary();
     const value = buffer.readUint8();
