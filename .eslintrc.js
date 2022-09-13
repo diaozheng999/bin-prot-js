@@ -18,7 +18,7 @@ module.exports = {
   settings: {
     "import/resolver": {
       typescript: {},
-    }
+    },
   },
   rules: {
     "no-console": "error",

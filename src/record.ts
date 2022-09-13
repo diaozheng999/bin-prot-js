@@ -1,7 +1,9 @@
 import { Tuple } from "./tuple.js";
 import { PreparedContextOfType, TypeClass, ValueOfType } from "./types.js";
 
-export function Record<T extends { [key: string]: TypeClass<unknown, unknown> }>(
+export function Record<
+  T extends { [key: string]: TypeClass<unknown, unknown> }
+>(
   spec: T
 ): TypeClass<
   { [k in keyof T]: ValueOfType<T[k]> },
