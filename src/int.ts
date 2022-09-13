@@ -44,7 +44,7 @@ export function prepareInt(n: number | bigint): {
   } else {
     if (n >= -0x80) {
       return { size: 2, context: [CODE_NEG_INT8, Number(n) & 0xff] };
-    } else if (n >= -(0x8000)) {
+    } else if (n >= -0x8000) {
       return { size: 3, context: [CODE_INT16, Number(n) & 0xffff] };
     } else if (n >= -2147483648) {
       return { size: 5, context: [CODE_INT32, Number(n)] };
@@ -80,8 +80,21 @@ export const Int: Typedef<number, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
     if (typeof result !== "number") {
-      throw new ReadError(buffer, `Use Int64 to read 64-bit ints into BigInt. ${result}`);
+      throw new ReadError(
+        buffer,
+        `Use Int64 to read 64-bit ints into BigInt. ${result}`
+      );
     }
+    buffer.popReadBoundary();
+    return result;
+  },
+  prepare: prepareInt,
+  write: writeInt,
+};
+
+export const VarInt64: Typedef<number | bigint, PreparedInt> = {
+  read(buffer) {
+    const result = unsafeReadInt(buffer);
     buffer.popReadBoundary();
     return result;
   },
@@ -102,8 +115,6 @@ export const Int64: Typedef<bigint, PreparedInt> = {
 export const VariantInt: Typedef<number, number> = {
   read(buffer) {
     buffer.pushReadBoundary();
-    const __buf = new WriteBuffer(buffer);
-    (__buf as any).ptr = 4;
     const result = buffer.readUint32();
     if ((result & 1) !== 0) {
       buffer.popReadBoundary();

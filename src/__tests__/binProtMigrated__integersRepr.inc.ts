@@ -13,8 +13,9 @@ import {
   Network32,
   Network64,
   VariantInt,
+  VarInt64,
 } from "../int.js";
-import { Nat0 } from "../nat0.js";
+import { Nat0, Nat0_64 } from "../nat0.js";
 import { Typedef } from "../types.js";
 
 const testWindowLen = 16n;
@@ -34,7 +35,7 @@ interface ToTest<T> extends ToTestBase<T> {
 }
 
 export interface IntConfig {
-  int: [min: number, max: number];
+  int: [min: number, max: number] | [min: bigint, max: bigint];
   int64bit: [min: bigint, max: bigint];
   int32bit: [min: number, max: number];
 }
@@ -270,14 +271,50 @@ function bint(
     def,
   };
 }
-export function runTests({int, int32bit, int64bit }: IntConfig) {
+
+function varint(
+  name: string,
+  def: Typedef<number | bigint, unknown>,
+  base: ToTestBase<bigint>
+): ToTest<number | bigint> {
+  return {
+    ...base,
+    toInt64: (x) => {
+      if (typeof x === "bigint") return x;
+      return BigInt(x);
+    },
+    ofInt64: (x) => {
+      if (x < 2147483647n && x >= -2147483648n) {
+        return Number(x);
+      }
+      return x;
+    },
+    name,
+    def,
+  };
+}
+
+function is32bit(
+  i: [min: number, max: number] | [min: bigint, max: bigint]
+): i is [min: number, max: number] {
+  return typeof i[0] === "number";
+}
+
+export function runTests({ int, int32bit, int64bit }: IntConfig) {
   const tests = [
-    num("int", Int, {
-      min: int[0],
-      max: int[1],
-      loBound: 1,
-      hiBound: 5,
-    }),
+    is32bit(int)
+      ? num("int", Int, {
+          min: int[0],
+          max: int[1],
+          loBound: 1,
+          hiBound: 5,
+        })
+      : varint("int", VarInt64, {
+          min: int[0],
+          max: int[1],
+          loBound: 1,
+          hiBound: 9,
+        }),
     num("int32", Int, {
       min: -2147483648,
       max: 2147483647,
@@ -290,12 +327,19 @@ export function runTests({int, int32bit, int64bit }: IntConfig) {
       loBound: 1,
       hiBound: 9,
     }),
-    num("nat0", Nat0, {
-      min: 0,
-      max: int[1],
-      loBound: 1,
-      hiBound: 5,
-    }),
+    typeof int[1] === "number"
+      ? num("nat0", Nat0, {
+          min: 0,
+          max: int[1],
+          loBound: 1,
+          hiBound: 5,
+        })
+      : varint("nat0", Nat0_64, {
+          min: 0n,
+          max: int[1],
+          loBound: 1,
+          hiBound: 9,
+        }),
     num("variant_int", VariantInt, {
       min: -(1 << 30),
       max: (1 << 30) - 1,
