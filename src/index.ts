@@ -12,3 +12,4 @@ export * from "./tuple.js";
 export * from "./types.js";
 export * from "./unit.js";
 export * from "./variant.js";
+export * from "./utils.js";
