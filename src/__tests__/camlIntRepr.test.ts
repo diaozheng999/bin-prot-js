@@ -209,10 +209,6 @@ function genTests(t: ToTest<any>) {
       const len = buf.currentPosition();
       output += `${t.name}| ${buf.hexdump(9)} -> ${n}`;
 
-      if (t.name === "int32" && n < -1073741831n) {
-        console.log(output, context);
-      }
-
       const readbuffer = new ReadBuffer(buffer);
 
       const received = t.toInt64(t.def.read(readbuffer));
@@ -270,13 +266,13 @@ function bint(
 test("bin_prot", () => {
   const tests = [
     num("int", Int, {
-      min: -2147482648,
+      min: -2147483648,
       max: 2147483647,
       loBound: 1,
       hiBound: 5,
     }),
     num("int32", Int, {
-      min: -2147482648,
+      min: -2147483648,
       max: 2147483647,
       loBound: 1,
       hiBound: 5,

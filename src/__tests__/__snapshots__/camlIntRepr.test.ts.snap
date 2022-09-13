@@ -1,8 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 // WARNING: never accept the corrected output for this file, it must never change!
 
-exports[`bin_prot 1`] = `
-"
+exports[`bin_prot 1`] = `"
 let%expect_test ("javascript integer tests" [@tags "js-only"]) =
   Integers_repr.run_tests ();
   [%expect

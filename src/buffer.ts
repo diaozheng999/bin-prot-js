@@ -230,13 +230,7 @@ export class WriteBuffer extends Buffer {
   }
 
   writeUint32(value: number, bigEndian?: boolean) {
-    console.log(value !== )
     this.view.setUint32(this.ptr, value, !bigEndian);
-    this.ptr += 4;
-  }
-
-  writeInt32(value: number, bigEndian?: boolean) {
-    this.view.setInt32(this.ptr, value, !bigEndian);
     this.ptr += 4;
   }
 

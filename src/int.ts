@@ -32,11 +32,11 @@ export function prepareInt(n: number | bigint): {
 } {
   if (n >= 0) {
     if (n < 0x80) {
-      return { size: 1, context: Number(n) };
+      return { size: 1, context: Number(n) & 0xff };
     } else if (n < 0x8000) {
       return { size: 3, context: [CODE_INT16, Number(n) & 0xffff] };
-    } else if (n < 0x80000000) {
-      return { size: 5, context: [CODE_INT32, Number(n) & 0xffffffff] };
+    } else if (n <= 2147483647) {
+      return { size: 5, context: [CODE_INT32, Number(n)] };
     } else {
       const bn = typeof n === "number" ? BigInt(n) : n;
       return { size: 9, context: [CODE_INT64, bn] };
@@ -44,9 +44,9 @@ export function prepareInt(n: number | bigint): {
   } else {
     if (n >= -0x80) {
       return { size: 2, context: [CODE_NEG_INT8, Number(n) & 0xff] };
-    } else if (n >= -0x8000) {
+    } else if (n >= -(0x8000)) {
       return { size: 3, context: [CODE_INT16, Number(n) & 0xffff] };
-    } else if (n >= -0x80000000) {
+    } else if (n >= -2147483648) {
       return { size: 5, context: [CODE_INT32, Number(n)] };
     } else {
       return { size: 9, context: [CODE_INT64, BigInt(n)] };
@@ -80,7 +80,7 @@ export const Int: Typedef<number, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
     if (typeof result !== "number") {
-      throw new ReadError(buffer, "Use Int64 to read 64-bit ints into BigInt.");
+      throw new ReadError(buffer, `Use Int64 to read 64-bit ints into BigInt. ${result}`);
     }
     buffer.popReadBoundary();
     return result;
@@ -202,4 +202,4 @@ export const Network64: Typedef<bigint, bigint> = {
   write(buffer, value) {
     buffer.writeInt64(value, true);
   },
-}
+};
