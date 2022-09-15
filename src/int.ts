@@ -9,6 +9,18 @@ export type PreparedInt =
   | [typeof CODE_INT32, number]
   | [typeof CODE_INT64, bigint];
 
+/**
+ * Reads a variable-sized int from buffer. It is marked unsafe because it pushes
+ * a read boundary but does not pop it.
+ *
+ * Consumers of this function should call `buffer.popReadBoundary()` before
+ * returning.
+ *
+ * @param buffer the buffer to read from
+ * @returns the number. If the number is larger than 32-bits, it will be
+ * returned as BigInt, even though it can still be represented within
+ * MAX_SAFE_INTEGER.
+ */
 export function unsafeReadInt(buffer: ReadBuffer) {
   const tag = buffer.readUint8();
   buffer.pushReadBoundary();
@@ -76,22 +88,26 @@ export function writeInt(buffer: WriteBuffer, ctx: PreparedInt) {
   }
 }
 
+/**
+ * Integer using variable encoding. This will safely read up to 53-bits.
+ */
 export const Int: TypeClass<number, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
-    if (typeof result !== "number") {
-      throw new ReadError(
-        buffer,
-        `Use Int64 to read 64-bit ints into BigInt. ${result}`
-      );
+    if (result >= Number.MAX_SAFE_INTEGER) {
+      throw new ReadError(buffer, `Value too large. ${result}`);
     }
     buffer.popReadBoundary();
-    return result;
+    return Number(result);
   },
   prepare: prepareInt,
   write: writeInt,
 };
 
+/**
+ * Integer of up to 64 bits using variable encoding. Anything larger than
+ * 32-bits will be returned as BigInt.
+ */
 export const VarInt64: TypeClass<number | bigint, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
@@ -102,6 +118,10 @@ export const VarInt64: TypeClass<number | bigint, PreparedInt> = {
   write: writeInt,
 };
 
+/**
+ * A 64-bit integer using variable encoding. This will always return
+ * a bigint.
+ */
 export const Int64: TypeClass<bigint, PreparedInt> = {
   read(buffer) {
     const result = unsafeReadInt(buffer);
@@ -112,6 +132,9 @@ export const Int64: TypeClass<bigint, PreparedInt> = {
   write: writeInt,
 };
 
+/**
+ * Integer used to encode polymorphic variants
+ */
 export const VariantInt: TypeClass<number, number> = {
   read(buffer) {
     buffer.pushReadBoundary();
@@ -131,6 +154,9 @@ export const VariantInt: TypeClass<number, number> = {
   },
 };
 
+/**
+ * 8-bit signed integer
+ */
 export const Int8Bit: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readInt8();
@@ -143,6 +169,9 @@ export const Int8Bit: TypeClass<number, number> = {
   },
 };
 
+/**
+ * 16-bit signed integer using fixed length encoding, little endian.
+ */
 export const Int16Bit: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readUint16();
@@ -155,6 +184,9 @@ export const Int16Bit: TypeClass<number, number> = {
   },
 };
 
+/**
+ * 32-bit signed integer using fixed length encoding, little endian.
+ */
 export const Int32Bit: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readInt32();
@@ -167,6 +199,9 @@ export const Int32Bit: TypeClass<number, number> = {
   },
 };
 
+/**
+ * 64-bit signed integer using fixed length encoding, little endian.
+ */
 export const Int64Bit: TypeClass<bigint, bigint> = {
   read(buffer) {
     return buffer.readInt64();
@@ -179,6 +214,29 @@ export const Int64Bit: TypeClass<bigint, bigint> = {
   },
 };
 
+/**
+ * writes any writable javascript integral number as a 64-bit integer using
+ * fixed length encoding, little endian.
+ */
+export const Int53Bit: TypeClass<number, bigint> = {
+  read(buffer) {
+    buffer.pushReadBoundary();
+    const value = buffer.readInt64();
+    if (value > Number.MAX_SAFE_INTEGER) {
+      throw new ReadError(buffer, "Value larger than MAX_SAFE_INTEGER");
+    }
+    buffer.popReadBoundary();
+    return Number(value);
+  },
+  prepare(value) {
+    return { size: 8, context: BigInt(value) };
+  },
+  write: Int64Bit.write,
+};
+
+/**
+ * 16-bit signed integer using fixed length encoding, big endian.
+ */
 export const Network16: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readUint16(true);
@@ -191,6 +249,9 @@ export const Network16: TypeClass<number, number> = {
   },
 };
 
+/**
+ * 32-bit signed integer using fixed length encoding, big endian.
+ */
 export const Network32: TypeClass<number, number> = {
   read(buffer) {
     return buffer.readInt32(true);
@@ -203,6 +264,9 @@ export const Network32: TypeClass<number, number> = {
   },
 };
 
+/**
+ * 64-bit signed integer using fixed length encoding, big endian.
+ */
 export const Network64: TypeClass<bigint, bigint> = {
   read(buffer) {
     return buffer.readInt64(true);
@@ -213,4 +277,24 @@ export const Network64: TypeClass<bigint, bigint> = {
   write(buffer, value) {
     buffer.writeInt64(value, true);
   },
+};
+
+/**
+ * writes any writable javascript integral number as a 64-bit integer using
+ * fixed length encoding, big endian.
+ */
+export const Network53: TypeClass<number, bigint> = {
+  read(buffer) {
+    buffer.pushReadBoundary();
+    const result = buffer.readInt64(true);
+    if (result > Number.MAX_SAFE_INTEGER) {
+      throw new ReadError(buffer, "Number too large");
+    }
+    buffer.popReadBoundary();
+    return Number(result);
+  },
+  prepare(context) {
+    return { size: 8, context: BigInt(context) };
+  },
+  write: Network64.write,
 };
