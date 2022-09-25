@@ -1,9 +1,11 @@
 import { expect, test } from "@jest/globals";
 import { Bool } from "../bool.js";
 import { ReadBuffer, WriteBuffer } from "../buffer.js";
+import { Char } from "../char.js";
+import { Float } from "../float.js";
+import { MD5, MD5String } from "../md5.js";
 import { TypeClass } from "../types.js";
 import { Unit } from "../unit.js";
-import { Char } from "../char.js";
 
 interface ToTest<T, U> {
   def: TypeClass<T, U>;
@@ -126,6 +128,74 @@ test("bin_prot: char", () => {
     7a -> "z"
     3b -> ";"
     ff -> "ÿ"
+    "
+  `);
+});
+
+test("bin_prot: digest", () => {
+  expect(
+    genTests({
+      def: MD5.default,
+      values: [
+        new MD5String([
+          0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45,
+          0x67, 0x89, 0xab, 0xcd, 0xef,
+        ]),
+      ],
+
+      equal: MD5String.equal,
+      hiBound: 16,
+      loBound: 16,
+      serialize: (a) => a.toString(),
+    })
+  ).toMatchInlineSnapshot(`
+    "
+    ef cd ab 89 67 45 23 01 ef cd ab 89 67 45 23 01 -> 0123456789abcdef0123456789abcdef
+    "
+  `);
+});
+
+test("bin_prot: float", () => {
+  expect(
+    genTests({
+      def: Float,
+      values: [
+        Number.EPSILON,
+        Infinity,
+        Number.MAX_VALUE,
+        2.2250738585072014e-308,
+        Number.MIN_VALUE,
+        -1,
+        -Infinity,
+        1,
+        1e-7,
+        0,
+        NaN,
+      ],
+
+      equal: (a, b) => {
+        if (isNaN(a) || isNaN(b)) {
+          return isNaN(a) && isNaN(b);
+        }
+        return a === b;
+      },
+      serialize: (v) => v.toString(),
+      hiBound: 8,
+      loBound: 8,
+    })
+  ).toMatchInlineSnapshot(`
+    "
+    3c b0 00 00 00 00 00 00 -> 2.220446049250313e-16
+    7f f0 00 00 00 00 00 00 -> Infinity
+    7f ef ff ff ff ff ff ff -> 1.7976931348623157e+308
+    00 10 00 00 00 00 00 00 -> 2.2250738585072014e-308
+    00 00 00 00 00 00 00 01 -> 5e-324
+    bf f0 00 00 00 00 00 00 -> -1
+    ff f0 00 00 00 00 00 00 -> -Infinity
+    3f f0 00 00 00 00 00 00 -> 1
+    3e 7a d7 f2 9a bc af 48 -> 1e-7
+    00 00 00 00 00 00 00 00 -> 0
+    7f f8 00 00 00 00 00 00 -> NaN
     "
   `);
 });

@@ -1,3 +1,5 @@
+import { byteToString } from "./hexdump.js";
+
 export class ReadError extends Error {
   constructor(buffer: ReadBuffer, message: string) {
     super(message);
@@ -92,6 +94,19 @@ class Buffer implements ArrayBuffer {
     }
   }
 
+  assertPosition(idx: number) {
+    this.assertLength(idx, this.contents.byteLength);
+  }
+
+  assertNext(idx: number) {
+    this.assertLength(idx, this.contents.byteLength + 1);
+  }
+
+  advance(n: number = 1) {
+    this.assertNext(this.ptr + n);
+    this.ptr += n;
+  }
+
   hexdump(maxLength: number) {
     let result = [];
 
@@ -105,12 +120,7 @@ class Buffer implements ArrayBuffer {
     }
 
     for (let i = array.length - 1; i >= 0; --i) {
-      const s = array[i].toString(16);
-      if (s.length < 2) {
-        result.push(`0${s}`);
-      } else {
-        result.push(array[i].toString(16));
-      }
+      result.push(byteToString(array[i]));
     }
     return result.join(" ");
   }
@@ -150,63 +160,70 @@ export class ReadBuffer extends Buffer {
 
   readUint8() {
     const value = this.view.getUint8(this.ptr);
-    this.ptr++;
+    this.advance();
     return value;
   }
 
   readInt8() {
     const value = this.view.getInt8(this.ptr);
-    this.ptr++;
+    this.advance();
     return value;
   }
 
   readFloat(bigEndian?: boolean) {
     const value = this.view.getFloat64(this.ptr, !bigEndian);
-    this.ptr += 8;
+    this.advance(8);
     return value;
   }
 
   readUint16(bigEndian?: boolean) {
     const value = this.view.getUint16(this.ptr, !bigEndian);
-    this.ptr += 2;
+    this.advance(2);
     return value;
   }
 
   readInt16(bigEndian?: boolean) {
     const value = this.view.getInt16(this.ptr, !bigEndian);
-    this.ptr += 2;
+    this.advance(2);
     return value;
   }
 
   readUint32(bigEndian?: boolean) {
     const value = this.view.getUint32(this.ptr, !bigEndian);
-    this.ptr += 4;
+    this.advance(4);
     return value;
   }
 
   readInt32(bigEndian?: boolean) {
     const value = this.view.getInt32(this.ptr, !bigEndian);
-    this.ptr += 4;
+    this.advance(4);
     return value;
   }
 
   readUint64(bigEndian?: boolean) {
     const value = this.view.getBigUint64(this.ptr, !bigEndian);
-    this.ptr += 8;
+    this.advance(8);
     return value;
   }
 
   readInt64(bigEndian?: boolean) {
     const value = this.view.getBigInt64(this.ptr, !bigEndian);
-    this.ptr += 8;
+    this.advance(8);
     return value;
   }
 
   readString(byteLength: number) {
     const buf = new Int8Array(this.contents, this.ptr, byteLength);
     const result = new TextDecoder().decode(buf);
-    this.ptr += byteLength;
+    this.advance(byteLength);
     return result;
+  }
+
+  readBytes(length: number) {
+    this.assertPosition(length);
+    const bytes = new Uint8Array(this.contents, this.ptr, length);
+    this.advance(length);
+    return bytes;
   }
 }
 
@@ -228,38 +245,38 @@ export class WriteBuffer extends Buffer {
 
   writeUint8(value: number) {
     this.view.setUint8(this.ptr, value & 0xff);
-    this.ptr++;
+    this.advance();
   }
 
   writeUint16(value: number, bigEndian?: boolean) {
     this.view.setUint16(this.ptr, value & 0xffff, !bigEndian);
-    this.ptr += 2;
+    this.advance(2);
   }
 
   writeUint32(value: number, bigEndian?: boolean) {
     this.view.setUint32(this.ptr, value, !bigEndian);
-    this.ptr += 4;
+    this.advance(4);
   }
 
   writeUint64(value: number | bigint, bigEndian?: boolean) {
     this.view.setBigUint64(this.ptr, BigInt(value), !bigEndian);
-    this.ptr += 8;
+    this.advance(8);
   }
 
   writeInt64(value: number | bigint, bigEndian?: boolean) {
     this.view.setBigInt64(this.ptr, BigInt(value), !bigEndian);
-    this.ptr += 8;
+    this.advance(8);
   }
 
   writeFloat(value: number, bigEndian?: boolean) {
     this.view.setFloat64(this.ptr, value, !bigEndian);
-    this.ptr += 8;
+    this.advance(8);
   }
 
   blit(buffer: Uint8Array, length?: number) {
     const buf = new Uint8Array(this.contents, this.ptr);
-    const len = length ?? buffer.length;
-    buf.set(buffer.slice(len));
-    this.ptr += len;
+    const len = length ?? buffer.byteLength;
+    buf.set(buffer.slice(0, len));
+    this.advance(len);
   }
 }
